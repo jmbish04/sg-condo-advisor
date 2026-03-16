@@ -1,0 +1,174 @@
+{
+  "project_name": "SG Condo Advisor Migration",
+  "generated_date": "2026-03-15T11:14:00Z",
+  "total_phases": 5,
+  "phases": [
+    {
+      "phase_number": 1,
+      "phase_title": "Discovery & Scaffolding",
+      "description": "Analyze Repo A and scaffold Repo B's core architecture.",
+      "success_criteria": [
+        "Repo A schemas and prompts analyzed",
+        "Wrangler types generated successfully",
+        "Astro and Hono dependencies verified"
+      ],
+      "implementation_plan": {
+        "title": "Initial Setup",
+        "description": "Set up paths, bindings, and fetch legacy data.",
+        "architecture": {
+          "explanation": "Standard Cloudflare Worker with Astro assets.",
+          "mermaid_diagram": "graph TD; A[Astro] --> B[Worker Assets]; B --> C[Hono Router];"
+        },
+        "proposed_changes": [
+          {
+            "category": "Config",
+            "files": [
+              {
+                "action": "MODIFY",
+                "file_path": "wrangler.jsonc",
+                "instructions": ["Add D1, DO, and AI bindings."]
+              }
+            ]
+          }
+        ],
+        "verification_plan": {
+          "automated_tests": [],
+          "manual_verification": ["Run npx wrangler types"]
+        }
+      },
+      "tasks": [
+        {
+          "task_number": 1,
+          "status": "not_started",
+          "agent_assigned": "Architect",
+          "task_title": "Setup workspace and types",
+          "task_description": "Configure wrangler.jsonc and generate types.",
+          "task_dependencies": [],
+          "cloudflare_docs_queries": ["What is the wrangler.jsonc syntax for D1 and Durable Objects bindings?"],
+          "steps": [
+            {
+              "number": 1.1,
+              "title": "Configure wrangler.jsonc",
+              "status": "not_started",
+              "technical_requirements": ["Set compatibility_date to today", "Add DB, ASSETS, and AdvisorAgent bindings"],
+              "success_criteria": ["wrangler.jsonc is valid"]
+            },
+            {
+              "number": 1.2,
+              "title": "Generate Types",
+              "status": "not_started",
+              "technical_requirements": ["Run pnpm run types"],
+              "success_criteria": ["worker-configuration.d.ts is generated"]
+            }
+          ],
+          "requirements": ["Always use pnpm"],
+          "success_criteria": ["Types exist and Env interface is globally available"]
+        }
+      ]
+    },
+    {
+      "phase_number": 2,
+      "phase_title": "Database Migration",
+      "description": "Port Drizzle schemas from Repo A to Repo B.",
+      "success_criteria": ["Migrations generated successfully", "Local D1 database created"],
+      "implementation_plan": {
+        "title": "DB Porting",
+        "description": "Convert HDB schemas to Condo schemas.",
+        "architecture": {
+          "explanation": "Drizzle ORM over D1.",
+          "mermaid_diagram": "graph TD; A[Drizzle] --> B[D1];"
+        },
+        "proposed_changes": [
+          {
+            "category": "Database",
+            "files": [
+              {
+                "action": "NEW",
+                "file_path": "src/backend/db/schemas/properties.ts",
+                "instructions": ["Create properties table schema"]
+              }
+            ]
+          }
+        ],
+        "verification_plan": {
+          "automated_tests": [],
+          "manual_verification": ["Run pnpm run db:generate"]
+        }
+      },
+      "tasks": [
+        {
+          "task_number": 2,
+          "status": "not_started",
+          "agent_assigned": "Architect",
+          "task_title": "Port schemas and migrate",
+          "task_description": "Write schemas and generate SQL.",
+          "task_dependencies": ["1"],
+          "cloudflare_docs_queries": ["Drizzle ORM setup for D1 sqlite dialect"],
+          "steps": [
+            {
+              "number": 2.1,
+              "title": "Create schemas",
+              "status": "not_started",
+              "technical_requirements": ["Use sqliteTable from drizzle-orm/sqlite-core"],
+              "success_criteria": ["Files exist in src/backend/db/schemas/"]
+            }
+          ],
+          "requirements": [],
+          "success_criteria": ["drizzle/ directory contains valid SQL"]
+        }
+      ]
+    },
+    {
+      "phase_number": 3,
+      "phase_title": "Honi Agent Implementation",
+      "description": "Replace Cloudflare Agents SDK with Honi framework.",
+      "success_criteria": ["AdvisorAgent DO compiles", "Honi API routes mounted"],
+      "implementation_plan": {
+        "title": "Honi Port",
+        "description": "Build the AI layer.",
+        "architecture": {
+          "explanation": "Honi agents running in DO.",
+          "mermaid_diagram": "graph TD; A[Hono] --> B[Honi Chat Route]; B --> C[Durable Object];"
+        },
+        "proposed_changes": [
+          {
+            "category": "AI",
+            "files": [
+              {
+                "action": "NEW",
+                "file_path": "src/backend/ai/agents/advisor.ts",
+                "instructions": ["Implement createAgent and tool() helpers."]
+              }
+            ]
+          }
+        ],
+        "verification_plan": {
+          "automated_tests": [],
+          "manual_verification": ["Check if TS compiles"]
+        }
+      },
+      "tasks": [
+        {
+          "task_number": 3,
+          "status": "not_started",
+          "agent_assigned": "AI/Agent",
+          "task_title": "Build Advisor Agent",
+          "task_description": "Use honidev to build the agent.",
+          "task_dependencies": ["2"],
+          "cloudflare_docs_queries": ["How to bind Durable Objects to a Worker?"],
+          "steps": [
+            {
+              "number": 3.1,
+              "title": "Implement Agent",
+              "status": "not_started",
+              "technical_requirements": ["Import from 'honidev'", "Add tools"],
+              "success_criteria": ["Agent logic is complete"]
+            }
+          ],
+          "requirements": ["Do not use Vercel AI SDK or legacy agents package."],
+          "success_criteria": ["Honi agent exported successfully."]
+        }
+      ]
+    }
+  ]
+}
