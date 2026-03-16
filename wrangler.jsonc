@@ -48,7 +48,7 @@
     {
       "binding": "DB",
       "database_name": "hbd-advisor",
-      "database_id": "781a9476-2cf0-43fc-94fc-742a16e39af5",
+      "database_id": "e3195b2a-8429-482c-8c4d-cb2f28a17835",
       "migrations_dir": "./drizzle"
     }
   ],
