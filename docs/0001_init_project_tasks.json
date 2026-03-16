@@ -6,11 +6,11 @@
     {
       "phase_number": 1,
       "phase_title": "Discovery & Scaffolding",
-      "description": "Analyze Repo A and scaffold Repo B's core architecture.",
+      "description": "Analyze Repo A, scaffold Repo B's core architecture, and configure Cloudflare bindings.",
       "success_criteria": [
-        "Repo A schemas and prompts analyzed",
         "Wrangler types generated successfully",
-        "Astro and Hono dependencies verified"
+        "Astro, Hono, and Honi dependencies verified",
+        "Global path aliases established in tsconfig.json"
       ],
       "implementation_plan": {
         "title": "Initial Setup",
@@ -26,7 +26,17 @@
               {
                 "action": "MODIFY",
                 "file_path": "wrangler.jsonc",
-                "instructions": ["Add D1, DO, and AI bindings."]
+                "instructions": [
+                  "Add D1, DO, and AI bindings.",
+                  "Add Secrets Store binding references for API keys."
+                ]
+              },
+              {
+                "action": "MODIFY",
+                "file_path": "tsconfig.json",
+                "instructions": [
+                  "Add global import paths (e.g., '@/*' mapping to './src/*')."
+                ]
               }
             ]
           }
@@ -42,7 +52,7 @@
           "status": "not_started",
           "agent_assigned": "Architect",
           "task_title": "Setup workspace and types",
-          "task_description": "Configure wrangler.jsonc and generate types.",
+          "task_description": "Configure wrangler.jsonc, tsconfig.json paths, and generate types.",
           "task_dependencies": [],
           "cloudflare_docs_queries": ["What is the wrangler.jsonc syntax for D1 and Durable Objects bindings?"],
           "steps": [
@@ -50,32 +60,40 @@
               "number": 1.1,
               "title": "Configure wrangler.jsonc",
               "status": "not_started",
-              "technical_requirements": ["Set compatibility_date to today", "Add DB, ASSETS, and AdvisorAgent bindings"],
+              "technical_requirements": [
+                "Set compatibility_date to today",
+                "Add DB, ASSETS, and AdvisorAgent bindings",
+                "Add AI Gateway configuration"
+              ],
               "success_criteria": ["wrangler.jsonc is valid"]
             },
             {
               "number": 1.2,
               "title": "Generate Types",
               "status": "not_started",
-              "technical_requirements": ["Run pnpm run types"],
-              "success_criteria": ["worker-configuration.d.ts is generated"]
+              "technical_requirements": ["Run pnpm run types or npx wrangler types"],
+              "success_criteria": ["worker-configuration.d.ts is generated and Env interface is globally available"]
             }
           ],
-          "requirements": ["Always use pnpm"],
-          "success_criteria": ["Types exist and Env interface is globally available"]
+          "requirements": ["Always use pnpm", "NEVER use relative import paths"],
+          "success_criteria": ["Types exist and tsconfig.json has path aliases"]
         }
       ]
     },
     {
       "phase_number": 2,
-      "phase_title": "Database Migration",
-      "description": "Port Drizzle schemas from Repo A to Repo B.",
-      "success_criteria": ["Migrations generated successfully", "Local D1 database created"],
+      "phase_title": "Database Modularization & Migration",
+      "description": "Port the monolithic Drizzle schema into modular files (one per table), verify against live DB, and generate migrations.",
+      "success_criteria": [
+        "All tables from the provided monolithic schema are modularized into src/backend/db/schemas/{table_name}.ts",
+        "drizzle-kit generate successfully creates migration files",
+        "Live DB sample completes successfully"
+      ],
       "implementation_plan": {
-        "title": "DB Porting",
-        "description": "Convert HDB schemas to Condo schemas.",
+        "title": "DB Porting & Modularization",
+        "description": "Break down the massive schema.ts into domain-specific, individual table files.",
         "architecture": {
-          "explanation": "Drizzle ORM over D1.",
+          "explanation": "Drizzle ORM over D1, strict one-file-per-table structure.",
           "mermaid_diagram": "graph TD; A[Drizzle] --> B[D1];"
         },
         "proposed_changes": [
@@ -84,15 +102,33 @@
             "files": [
               {
                 "action": "NEW",
-                "file_path": "src/backend/db/schemas/properties.ts",
-                "instructions": ["Create properties table schema"]
+                "file_path": "src/backend/db/schemas/logs.ts",
+                "instructions": ["Extract logs table schema"]
+              },
+              {
+                "action": "NEW",
+                "file_path": "src/backend/db/schemas/traces.ts",
+                "instructions": ["Extract traces and traceEvents table schemas"]
+              },
+              {
+                "action": "NEW",
+                "file_path": "src/backend/db/schemas/marketSnapshots.ts",
+                "instructions": ["Extract marketSnapshots table schema"]
+              },
+              {
+                "action": "NEW",
+                "file_path": "src/backend/db/schemas/enrichedHdbBlocks.ts",
+                "instructions": ["Extract enrichedHdbBlocks table schema"]
               }
             ]
           }
         ],
         "verification_plan": {
           "automated_tests": [],
-          "manual_verification": ["Run pnpm run db:generate"]
+          "manual_verification": [
+            "Run npm run db:generate",
+            "Sample existing DB using env API/Account keys"
+          ]
         }
       },
       "tasks": [
@@ -100,35 +136,87 @@
           "task_number": 2,
           "status": "not_started",
           "agent_assigned": "Architect",
-          "task_title": "Port schemas and migrate",
-          "task_description": "Write schemas and generate SQL.",
+          "task_title": "Modularize Schemas",
+          "task_description": "Convert the monolithic schema into separate files per table inside src/backend/db/schemas/.",
           "task_dependencies": ["1"],
           "cloudflare_docs_queries": ["Drizzle ORM setup for D1 sqlite dialect"],
           "steps": [
             {
               "number": 2.1,
-              "title": "Create schemas",
+              "title": "Create Observability Schemas",
               "status": "not_started",
-              "technical_requirements": ["Use sqliteTable from drizzle-orm/sqlite-core"],
-              "success_criteria": ["Files exist in src/backend/db/schemas/"]
+              "technical_requirements": ["Create logs.ts, traces.ts, traceEvents.ts, systemHealthTests.ts"],
+              "success_criteria": ["Files exist and export valid SQLite Drizzle tables"]
+            },
+            {
+              "number": 2.2,
+              "title": "Create User & Realtor Domain Schemas",
+              "status": "not_started",
+              "technical_requirements": ["Create marketSnapshots.ts, trackedProperties.ts, buyerPreferences.ts, userPreferenceProfiles.ts, agentChatLogs.ts, userFeedbackEvents.ts"],
+              "success_criteria": ["Files exist and export valid SQLite Drizzle tables"]
+            },
+            {
+              "number": 2.3,
+              "title": "Create Raw Ingestion & Transport Schemas",
+              "status": "not_started",
+              "technical_requirements": ["Create rawHdbResalePrices.ts, rawHdbPropertyInfo.ts, rawLtaMrtStations.ts, rawGovMarketsHawkerCentres.ts, etc."],
+              "success_criteria": ["Files exist and export valid SQLite Drizzle tables"]
+            },
+            {
+              "number": 2.4,
+              "title": "Create AI, Policy & Enriched Schemas",
+              "status": "not_started",
+              "technical_requirements": ["Create userInsights.ts, policyPages.ts, enrichedHdbBlocks.ts, hdbScoreLah.ts, aiPropertyListings.ts, etc."],
+              "success_criteria": ["Files exist and export valid SQLite Drizzle tables"]
             }
           ],
-          "requirements": [],
-          "success_criteria": ["drizzle/ directory contains valid SQL"]
+          "requirements": ["Strictly one file per table or tight logical pairing (e.g., traces + traceEvents in traces.ts is acceptable if strictly related, but 1-to-1 is preferred)."],
+          "success_criteria": ["Schema is fully modularized"]
+        },
+        {
+          "task_number": 3,
+          "status": "not_started",
+          "agent_assigned": "Architect",
+          "task_title": "Database Verification & Migration",
+          "task_description": "Sample the live DB to verify schema matches, then generate Drizzle migrations.",
+          "task_dependencies": ["2"],
+          "cloudflare_docs_queries": [],
+          "steps": [
+            {
+              "number": 3.1,
+              "title": "Live DB Sample",
+              "status": "not_started",
+              "technical_requirements": ["Write a temporary script to sample the remote D1 DB to ensure columns match your new schema files."],
+              "success_criteria": ["Schema accurately reflects live data"]
+            },
+            {
+              "number": 3.2,
+              "title": "Generate Migrations",
+              "status": "not_started",
+              "technical_requirements": ["Run 'npm run db:generate'"],
+              "success_criteria": ["SQL files appear in drizzle/ directory"]
+            }
+          ],
+          "requirements": ["Use package.json scripts exclusively (db:generate, migrate:remote)"],
+          "success_criteria": ["Migrations generated successfully"]
         }
       ]
     },
     {
       "phase_number": 3,
       "phase_title": "Honi Agent Implementation",
-      "description": "Replace Cloudflare Agents SDK with Honi framework.",
-      "success_criteria": ["AdvisorAgent DO compiles", "Honi API routes mounted"],
+      "description": "Implement the core AI logic using the `honidev` framework, routing via AI Gateway and leveraging MCP tools.",
+      "success_criteria": [
+        "AdvisorAgent DO compiles",
+        "Honi API routes mounted via Hono",
+        "AI Gateway Client integrated"
+      ],
       "implementation_plan": {
         "title": "Honi Port",
-        "description": "Build the AI layer.",
+        "description": "Build the AI layer using honidev.",
         "architecture": {
-          "explanation": "Honi agents running in DO.",
-          "mermaid_diagram": "graph TD; A[Hono] --> B[Honi Chat Route]; B --> C[Durable Object];"
+          "explanation": "Honi agents running in DO, calling models via AI Gateway.",
+          "mermaid_diagram": "graph TD; A[Hono] --> B[Honi API]; B --> C[Durable Object]; C --> D[AI Gateway Client]; D --> E[LLM];"
         },
         "proposed_changes": [
           {
@@ -149,24 +237,178 @@
       },
       "tasks": [
         {
-          "task_number": 3,
+          "task_number": 4,
           "status": "not_started",
           "agent_assigned": "AI/Agent",
-          "task_title": "Build Advisor Agent",
-          "task_description": "Use honidev to build the agent.",
-          "task_dependencies": ["2"],
+          "task_title": "Build Advisor Agent & Tools",
+          "task_description": "Use honidev to build the agent, integrate AI Gateway, and add tools.",
+          "task_dependencies": ["3"],
           "cloudflare_docs_queries": ["How to bind Durable Objects to a Worker?"],
           "steps": [
             {
-              "number": 3.1,
+              "number": 4.1,
               "title": "Implement Agent",
               "status": "not_started",
-              "technical_requirements": ["Import from 'honidev'", "Add tools"],
+              "technical_requirements": [
+                "Import from 'honidev'",
+                "Set memory to use DO (working) and D1 (episodic)",
+                "Ensure AI model calls route through src/lib/ai/utils/ai-gateway-client.ts"
+              ],
               "success_criteria": ["Agent logic is complete"]
+            },
+            {
+              "number": 4.2,
+              "title": "Implement Browser Render Tool",
+              "status": "not_started",
+              "technical_requirements": [
+                "Add a researchCondo tool leveraging src/lib/cloudflare/browser.ts to scrape live info."
+              ],
+              "success_criteria": ["Browser render tool is attached to the Honi agent"]
+            },
+            {
+              "number": 4.3,
+              "title": "Expose MCP Endpoints",
+              "status": "not_started",
+              "technical_requirements": [
+                "Expose /mcp and /sse endpoints in the Hono router for external AI clients."
+              ],
+              "success_criteria": ["MCP endpoints are functional"]
             }
           ],
           "requirements": ["Do not use Vercel AI SDK or legacy agents package."],
-          "success_criteria": ["Honi agent exported successfully."]
+          "success_criteria": ["Honi agent exported successfully with tools."]
+        }
+      ]
+    },
+    {
+      "phase_number": 4,
+      "phase_title": "Frontend Retrofit",
+      "description": "Convert Stitch HTML mockups into Astro pages and shadcn/ui React Islands.",
+      "success_criteria": [
+        "Astro application deployed with dark theme",
+        "Stitch mockups converted to shadcn/ui",
+        "MCP Tester and Chat UI functional"
+      ],
+      "implementation_plan": {
+        "title": "Astro + shadcn UI",
+        "description": "Build out the frictionless frontend using islands architecture.",
+        "architecture": {
+          "explanation": "Astro MPA with React Islands.",
+          "mermaid_diagram": "graph TD; A[Astro Pages] --> B[React Islands]; B --> C[Hono Backend];"
+        },
+        "proposed_changes": [
+          {
+            "category": "Frontend",
+            "files": [
+              {
+                "action": "NEW",
+                "file_path": "src/pages/mcp-tester.astro",
+                "instructions": ["Create MCP visual tester page"]
+              }
+            ]
+          }
+        ],
+        "verification_plan": {
+          "automated_tests": [],
+          "manual_verification": ["Run npm run dev and inspect the UI visually."]
+        }
+      },
+      "tasks": [
+        {
+          "task_number": 5,
+          "status": "not_started",
+          "agent_assigned": "Frontend",
+          "task_title": "Build Astro Pages and Retrofit Mockups",
+          "task_description": "Pull down Stitch mockups and convert them to shadcn/ui components in Astro.",
+          "task_dependencies": ["4"],
+          "cloudflare_docs_queries": [],
+          "steps": [
+            {
+              "number": 5.1,
+              "title": "Global Layout & Sidebar",
+              "status": "not_started",
+              "technical_requirements": ["Enforce <html class='dark'>", "Build persistent sidebar navigation linking to all routes."],
+              "success_criteria": ["Layout is styled correctly in dark mode"]
+            },
+            {
+              "number": 5.2,
+              "title": "Retrofit Stitch Mockups",
+              "status": "not_started",
+              "technical_requirements": ["Translate all raw HTML elements from mockups to shadcn/ui React components (e.g. <Button>).", "Use client:load for interactive islands."],
+              "success_criteria": ["No raw tailwind HTML buttons exist, only shadcn components"]
+            },
+            {
+              "number": 5.3,
+              "title": "Build MCP Tester Interface",
+              "status": "not_started",
+              "technical_requirements": ["Build /mcp-tester with a 2-column layout to select tools, input JSON, and view raw output."],
+              "success_criteria": ["MCP Tester can execute tools successfully"]
+            }
+          ],
+          "requirements": ["Frictionless frontend (no auth required for users)."],
+          "success_criteria": ["Frontend compiles and matches mockups functionally."]
+        }
+      ]
+    },
+    {
+      "phase_number": 5,
+      "phase_title": "Polish & Deployment",
+      "description": "Finalize observability, health dashboards, and deploy to Cloudflare.",
+      "success_criteria": [
+        "Dashboard shows live DB traces",
+        "Deployment pipeline succeeds"
+      ],
+      "implementation_plan": {
+        "title": "Deployment",
+        "description": "Ensure observability works and ship to production.",
+        "architecture": {
+          "explanation": "Cloudflare deploy.",
+          "mermaid_diagram": "graph TD; A[Local] -->|npm run deploy| B[Cloudflare Edge];"
+        },
+        "proposed_changes": [
+          {
+            "category": "Deployment",
+            "files": [
+              {
+                "action": "MODIFY",
+                "file_path": "package.json",
+                "instructions": ["Verify deploy scripts."]
+              }
+            ]
+          }
+        ],
+        "verification_plan": {
+          "automated_tests": [],
+          "manual_verification": ["Check live URL."]
+        }
+      },
+      "tasks": [
+        {
+          "task_number": 6,
+          "status": "not_started",
+          "agent_assigned": "Evaluator",
+          "task_title": "Final Deployment",
+          "task_description": "Verify the dashboard and deploy.",
+          "task_dependencies": ["5"],
+          "cloudflare_docs_queries": [],
+          "steps": [
+            {
+              "number": 6.1,
+              "title": "Dashboard Observability",
+              "status": "not_started",
+              "technical_requirements": ["Ensure /dashboard island fetches from D1 traces and healthLogs schemas to display system status."],
+              "success_criteria": ["Dashboard renders trace data"]
+            },
+            {
+              "number": 6.2,
+              "title": "Execute Deployment",
+              "status": "not_started",
+              "technical_requirements": ["Run 'npm run build && npm run migrate:remote && npx wrangler deploy'"],
+              "success_criteria": ["Live application URL is accessible"]
+            }
+          ],
+          "requirements": ["Check OpenAPI schemas exist at /openapi.json"],
+          "success_criteria": ["Project successfully ported and live."]
         }
       ]
     }
