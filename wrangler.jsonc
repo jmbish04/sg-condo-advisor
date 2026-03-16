@@ -29,6 +29,10 @@
     "binding": "AI"
   },  
 
+  "vars":{
+	"AI_GATEWAY_NAME": "default-gateway"
+  },
+
   // Static Assets Configuration (for React SPA)
   // CRITICAL: run_worker_first = true ensures Worker has full routing control
   // This prevents asset server from intercepting WebSocket upgrades
