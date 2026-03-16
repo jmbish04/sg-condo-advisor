@@ -1,13 +1,8 @@
-import { defineConfig } from "drizzle-kit";
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
-export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/db/schema.ts",
-  out: "./drizzle",
-});
+
 
 
 
